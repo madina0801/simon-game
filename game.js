@@ -10,22 +10,22 @@ let level = 0;
 
 function nextSequence() {
   userClickedPattern = [];
-
   level++;
-  $('#level-title').text(`Level ${level}`);
 
+  $('#level-title').text(`Level ${level}`);
   const randomNumber = Math.trunc(Math.random() * 4);
 
   const randomChosenColor = buttonColors[randomNumber];
   gamePattern.push(randomChosenColor);
 
+  $("#" + randomChosenColor).fadeIn(100).fadeOut(100).fadeIn(100);
   playSound(randomChosenColor);
 }
 
 // Start a game by pressing a key
 
-$('html').keydown(function() {
-  $('#level-title').text('Level 0');
+$(document).keydown(function() {
+  $('#level-title').text("Level " + level);
 
   if(!started) {
     nextSequence();
@@ -38,15 +38,21 @@ $('html').keydown(function() {
 $('.btn').on('click', function() {
   const userChosenColor = $(this).attr("id");
   userClickedPattern.push(userChosenColor);
+
   playSound(userChosenColor);
+  animatePress(userChosenColor);
+
   checkAnswer(userClickedPattern.length - 1);
 });
+
+function animatePress(currentColor) {
+  $("#" + currentColor).addClass("pressed");
+  setTimeout(function() {
+    $('#' + currentColor).removeClass("pressed"); 
+  }, 100);
+}
  
 function playSound(name) {
-  // Make buttons flash
-   $("#" + name)
-  .fadeOut(100)
-  .fadeIn(100);
   // Button sounds
   let sound = new Howl({
     src: ["sounds/" + name + ".mp3"],
@@ -57,20 +63,27 @@ function playSound(name) {
 
 // Check the user's answer against the game sequence
 
-function checkAnswer(currentLevel) {
-  if(userClickedPattern[currentLevel] === gamePattern[currentLevel]) {
-    console.log("success");
-    if(userClickedPattern.length === gamePattern.length) {
-      setTimeout(function() {
+function checkAnswer(lastColor) {
+  if (gamePattern[lastColor] === userClickedPattern[lastColor]) {
+
+    //4. If the user got the most recent answer right in step 3, then check that they have finished their sequence with another if statement.
+    if (userClickedPattern.length === gamePattern.length){
+      //5. Call nextSequence() after a 1000 millisecond delay.
+      setTimeout(function () {
         nextSequence();
       }, 1000);
-    } else {
-      console.log("wrong");
-      const wrongSound = new Howl({
-        src: ['sounds/wrong.mp3'],
-      });
-      wrongSound.play();
     }
+
+  } else {
+    playSound("wrong");
+    $('body').addClass("game-over");
+    $('h1').text("Game Over, Press Any Key to Restart");
+  
+    setTimeout(function() {
+      $('body').removeClass("game-over");
+    }, 200);
+
+    startOver();
   }
 }
 
@@ -79,5 +92,6 @@ function checkAnswer(currentLevel) {
 function startOver() {
   level = 0;
   gamePattern = [];
-  pressed = false;
+  userClickedPattern = [];
+  started = false;
 }
